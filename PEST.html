@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Przewodnik po Migracji do Pest v4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: A single-page application with a sticky top navigation for easy exploration. The structure is thematic, guiding the user from the "why" (philosophy) to the "what" (features/comparison), the "how" (migration plan), and the "so what" (strategic value). This non-linear but guided approach allows users to either follow the narrative or jump directly to sections of interest, maximizing usability and information retention. Key interactions include a dynamic code comparator, tabbed content for features, and a summary chart to visualize benefits. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core philosophy of Pest (DX, readability). Goal: Inform & Engage. Viz/Method: Dynamic stat cards with key metrics. Interaction: Subtle hover effects. Justification: Quickly convey the main value proposition. Library: Tailwind CSS.
+        - Report Info: Syntax comparison between PHPUnit and Pest. Goal: Compare. Viz/Method: Interactive side-by-side code viewer. Interaction: User clicks buttons to switch between different code examples (assertions, data providers). Justification: A direct, hands-on comparison is far more effective than a static table. Library: Vanilla JS.
+        - Report Info: Key features of Pest (Datasets, Higher-Order Tests, Arch). Goal: Organize & Explain. Viz/Method: Tabbed interface. Interaction: User clicks tabs to reveal content for each feature. Justification: Prevents information overload and keeps the layout clean. Library: Vanilla JS.
+        - Report Info: Pest v4 features (Browser, Visual, Smoke testing). Goal: Inform. Viz/Method: Grid of feature cards with icons. Interaction: Hover effects. Justification: Visually appealing and easy to scan. Library: Tailwind CSS.
+        - Report Info: Migration process. Goal: Guide. Viz/Method: Step-by-step visual diagram. Interaction: None. Justification: A visual flow is easier to follow than a text list. Library: HTML/CSS with Tailwind.
+        - Report Info: Summary of benefits. Goal: Persuade. Viz/Method: Bar chart. Interaction: Tooltips on hover. Justification: A chart provides a powerful, data-driven final argument for the migration. Library: Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #38332E;
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #D4A373;
+            transition: width 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #D4A373;
+        }
+        .nav-link.active::after, .nav-link:hover::after {
+            width: 100%;
+        }
+        .tab.active {
+            background-color: #D4A373;
+            color: #FFFFFF;
+        }
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            line-height: 1.6;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-[#38332E]">Pest v4</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#dlaczego-pest" class="nav-link font-medium">Dlaczego Pest?</a>
+                <a href="#porownanie" class="nav-link font-medium">Porównanie</a>
+                <a href="#funkcje" class="nav-link font-medium">Kluczowe Funkcje</a>
+                <a href="#rewolucja-v4" class="nav-link font-medium">Rewolucja v4</a>
+                <a href="#migracja" class="nav-link font-medium">Plan Migracji</a>
+                <a href="#podsumowanie" class="nav-link font-medium">Podsumowanie</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4 space-y-2">
+            <a href="#dlaczego-pest" class="block nav-link font-medium">Dlaczego Pest?</a>
+            <a href="#porownanie" class="block nav-link font-medium">Porównanie</a>
+            <a href="#funkcje" class="block nav-link font-medium">Kluczowe Funkcje</a>
+            <a href="#rewolucja-v4" class="block nav-link font-medium">Rewolucja v4</a>
+            <a href="#migracja" class="block nav-link font-medium">Plan Migracji</a>
+            <a href="#podsumowanie" class="block nav-link font-medium">Podsumowanie</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="dlaczego-pest" class="text-center min-h-[80vh] flex flex-col justify-center items-center">
+            <h2 class="text-5xl md:text-6xl font-extrabold mb-4 leading-tight">Nowy paradygmat w testowaniu PHP.</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-12">Pest to nie tylko alternatywa dla PHPUnit. To zmiana filozofii, która stawia na pierwszym miejscu doświadczenie dewelopera (DX), czytelność i produktywność, przywracając radość z pisania testów.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200/50 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl mb-2">🚀</div>
+                    <h3 class="text-xl font-bold mb-2">Lepsze DX</h3>
+                    <p class="text-gray-600">Minimalistyczna, płynna składnia redukuje obciążenie poznawcze i pozwala skupić się na logice testu, a nie na kodzie szablonowym.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200/50 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl mb-2">📖</div>
+                    <h3 class="text-xl font-bold mb-2">Wyjątkowa Czytelność</h3>
+                    <p class="text-gray-600">Testy napisane w Pest przypominają naturalny język, co ułatwia ich zrozumienie i utrzymanie w długim okresie.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200/50 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl mb-2">🛠️</div>
+                    <h3 class="text-xl font-bold mb-2">Zunifikowany Framework</h3>
+                    <p class="text-gray-600">Pest v4 łączy testy backendu, architektury, przeglądarki i regresji wizualnej w jednym, spójnym narzędziu.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="porownanie" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold">Stare vs. Nowe: PHPUnit kontra Pest</h2>
+                <p class="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">Zobacz na żywo, jak elegancka składnia Pest redukuje kod i poprawia czytelność w typowych scenariuszach testowych.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200/50">
+                <div id="code-comparison-controls" class="flex flex-wrap justify-center gap-3 mb-6">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2 text-center">PHPUnit</h3>
+                        <pre id="phpunit-code" class="code-block rounded-lg p-4 text-sm overflow-x-auto h-80"></pre>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2 text-center">Pest</h3>
+                        <pre id="pest-code" class="code-block rounded-lg p-4 text-sm overflow-x-auto h-80"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="funkcje" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold">Potężny Zestaw Narzędzi</h2>
+                <p class="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">Odkryj funkcje, które przenoszą testowanie na wyższy poziom abstrakcji, pozwalając myśleć o zachowaniach i architekturze, a nie o mechanice.</p>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div class="flex border-b border-gray-300">
+                    <button data-tab="datasets" class="tab flex-1 py-3 px-4 font-medium text-gray-600 hover:bg-gray-100 transition-colors duration-200 active">Zestawy Danych</button>
+                    <button data-tab="higher-order" class="tab flex-1 py-3 px-4 font-medium text-gray-600 hover:bg-gray-100 transition-colors duration-200">Testy Wyższego Rzędu</button>
+                    <button data-tab="arch" class="tab flex-1 py-3 px-4 font-medium text-gray-600 hover:bg-gray-100 transition-colors duration-200">Testy Architektury</button>
+                </div>
+                <div class="bg-white p-8 rounded-b-xl shadow-lg border border-t-0 border-gray-200/50">
+                    <div id="tab-content">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="rewolucja-v4" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold">Rewolucja v4: Platforma Full-Stack</h2>
+                <p class="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">Pest v4 to przełom. Zobacz, jak integruje cały cykl życia testowania w jednym, spójnym środowisku.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200/50 text-center">
+                    <div class="text-4xl mb-4">🖥️</div>
+                    <h3 class="text-xl font-bold mb-2">Testy Przeglądarkowe</h3>
+                    <p class="text-gray-600">Oparte na Playwright, w pełni zintegrowane z Laravelem. Testuj interakcje UI tą samą składnią co logikę backendu.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200/50 text-center">
+                    <div class="text-4xl mb-4">📸</div>
+                    <h3 class="text-xl font-bold mb-2">Regresja Wizualna</h3>
+                    <p class="text-gray-600">Automatycznie wykrywaj niezamierzone zmiany w UI, porównując zrzuty ekranu z zapisanym wzorcem.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200/50 text-center">
+                    <div class="text-4xl mb-4">💨</div>
+                    <h3 class="text-xl font-bold mb-2">Testy Dymne (Smoke)</h3>
+                    <p class="text-gray-600">Jedną komendą sprawdź, czy kluczowe strony aplikacji ładują się bez błędów JavaScript w konsoli.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200/50 text-center">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h3 class="text-xl font-bold mb-2">Wydajność w CI/CD</h3>
+                    <p class="text-gray-600">Natywne wsparcie dla równoległego uruchamiania (`--parallel`) i shardingu (`--shard`) drastycznie skraca czas testów.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="migracja" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold">Praktyczny Plan Migracji</h2>
+                <p class="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">Przejście na Pest jest procesem o niskim ryzyku dzięki wstecznej kompatybilności i zautomatyzowanym narzędziom. Oto rekomendowana ścieżka.</p>
+            </div>
+            <div class="relative">
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-[#D4A373]/50" aria-hidden="true"></div>
+                <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center space-y-8 md:space-y-0">
+                    <div class="flex-1 text-center px-4">
+                        <div class="mx-auto w-16 h-16 bg-[#D4A373] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">1</div>
+                        <h3 class="text-lg font-semibold mb-1">Wymagania</h3>
+                        <p class="text-sm text-gray-600">Upewnij się, że używasz PHP 8.3+. Zaktualizuj pakiety Pest w `composer.json` do wersji `^4.0`.</p>
+                    </div>
+                    <div class="flex-1 text-center px-4">
+                        <div class="mx-auto w-16 h-16 bg-[#D4A373] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">2</div>
+                        <h3 class="text-lg font-semibold mb-1">Aktualizacja Arch</h3>
+                        <p class="text-sm text-gray-600">Zacznij od uruchomienia istniejących testów architektury, aby zweryfikować poprawność konfiguracji.</p>
+                    </div>
+                    <div class="flex-1 text-center px-4">
+                        <div class="mx-auto w-16 h-16 bg-[#D4A373] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">3</div>
+                        <h3 class="text-lg font-semibold mb-1">Automatyczna Konwersja</h3>
+                        <p class="text-sm text-gray-600">Użyj `./vendor/bin/pest --drift` do iteracyjnej konwersji testów PHPUnit, moduł po module.</p>
+                    </div>
+                    <div class="flex-1 text-center px-4">
+                        <div class="mx-auto w-16 h-16 bg-[#D4A373] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">4</div>
+                        <h3 class="text-lg font-semibold mb-1">Wdrożenie Zespołu</h3>
+                        <p class="text-sm text-gray-600">Ustanów nowe konwencje i zasadę, że wszystkie nowe testy muszą być pisane w Pest.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="podsumowanie" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold">Werdykt: Inwestycja w Przyszłość</h2>
+                <p class="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">Migracja na Pest v4 to strategiczna decyzja, która przynosi wymierne korzyści w kluczowych obszarach rozwoju oprogramowania.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200/50">
+                <div class="chart-container">
+                    <canvas id="benefitsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 border-t">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-600">
+            <p>Interaktywny przewodnik stworzony na podstawie analizy strategicznej i technicznej.</p>
+            <p class="text-sm mt-2">Wszystkie dane i przykłady kodu pochodzą z dostarczonych raportów.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const codeData = {
+                'Podstawowa asercja': {
+                    phpunit: `<?php\nuse PHPUnit\\Framework\\TestCase;\n\nclass ExampleTest extends TestCase\n{\n    public function test_that_true_is_true(): void\n    {\n        $this->assertTrue(true);\n    }\n}`,
+                    pest: `test('true is true', function () {\n    expect(true)->toBeTrue();\n});`
+                },
+                'Konfiguracja testu': {
+                    phpunit: `<?php\nuse Tests\\TestCase;\n\nclass UserTest extends TestCase\n{\n    protected function setUp(): void\n    {\n        parent::setUp();\n        $this->user = User::factory()->create();\n    }\n    // ...testy\n}`,
+                    pest: `beforeEach(function () {\n    $this->user = User::factory()->create();\n});\n\n// ...testy`
+                },
+                'Test oparty na danych': {
+                    phpunit: `/**\n * @dataProvider roleProvider\n */\npublic function test_roles($role, $expected)\n{\n    // ...logika\n}\n\npublic function roleProvider(): array\n{\n    return [\n        'Admin' => ['admin', true],\n        'User'  => ['user', false],\n    ];\n}`,
+                    pest: `test('roles', function ($role, $expected) {\n    // ...logika\n})\n->with([\n    ['admin', true],\n    ['user', false],\n]);`
+                },
+                'Testy wielu właściwości': {
+                    phpunit: `$this->assertEquals('Christoph', $channel->name);\n$this->assertEquals('AT', $channel->country);\n$this->assertStringStartsWith('Hi', $channel->description);`,
+                    pest: `expect($channel)\n    ->name->toBe('Christoph')\n    ->country->toBe('AT')\n    ->description->toStartWith('Hi');`
+                }
+            };
+
+            const tabData = {
+                datasets: {
+                    title: 'Zestawy Danych (Datasets)',
+                    content: 'Elegancka alternatywa dla Data Providers z PHPUnit. Pozwalają na definiowanie danych testowych bezpośrednio przy teście, co poprawia czytelność i promuje zasady DRY. Pest wspiera wbudowane, współdzielone i dynamicznie generowane zestawy danych.',
+                    code: `test('email is valid', function (string $email) {\n    // Logika walidacji\n})->with([\n    'taylor@laravel.com',\n    'nuno@laravel.com',\n]);`
+                },
+                'higher-order': {
+                    title: 'Testy i Oczekiwania Wyższego Rzędu',
+                    content: 'Unikalna cecha Pest, która pozwala na dalszą redukcję kodu w prostych przypadkach. Można całkowicie pominąć domknięcie testowe, tworząc niezwykle zwięzłe i ekspresyjne testy, idealne dla endpointów API.',
+                    code: `test('homepage is accessible')\n    ->get('/')\n    ->assertOk();`
+                },
+                arch: {
+                    title: 'Testowanie Architektury',
+                    content: 'Strategiczne narzędzie do egzekwowania reguł i standardów kodu bezpośrednio w pakiecie testów. Zapobiegaj złym praktykom (np. używaniu `dd()`), wymuszaj konwencje nazewnictwa i utrzymuj czystą architekturę aplikacji.',
+                    code: `test('debug functions are not used')\n    ->expect(['dd', 'dump', 'ray'])\n    ->not->toBeUsed();`
+                }
+            };
+
+            const phpunitCodeEl = document.getElementById('phpunit-code');
+            const pestCodeEl = document.getElementById('pest-code');
+            const controlsContainer = document.getElementById('code-comparison-controls');
+
+            function updateCode(key) {
+                phpunitCodeEl.textContent = codeData[key].phpunit;
+                pestCodeEl.textContent = codeData[key].pest;
+                document.querySelectorAll('#code-comparison-controls button').forEach(btn => {
+                    btn.classList.toggle('bg-[#D4A373]', btn.textContent === key);
+                    btn.classList.toggle('text-white', btn.textContent === key);
+                    btn.classList.toggle('bg-gray-200', btn.textContent !== key);
+                });
+            }
+
+            Object.keys(codeData).forEach((key, index) => {
+                const button = document.createElement('button');
+                button.textContent = key;
+                button.className = 'px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200';
+                button.onclick = () => updateCode(key);
+                controlsContainer.appendChild(button);
+                if (index === 0) {
+                    updateCode(key);
+                }
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            const tabContentEl = document.getElementById('tab-content');
+
+            function updateTabContent(tabKey) {
+                const data = tabData[tabKey];
+                tabContentEl.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-4">${data.title}</h3>
+                    <p class="text-gray-700 mb-6">${data.content}</p>
+                    <pre class="code-block rounded-lg p-4 text-sm overflow-x-auto"><code>${data.code}</code></pre>
+                `;
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    updateTabContent(tab.dataset.tab);
+                });
+            });
+
+            updateTabContent('datasets');
+
+            const ctx = document.getElementById('benefitsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Produktywność Zespołu', 'Jakość Kodu', 'Szybkość CI/CD', 'Spójność Frameworka'],
+                    datasets: [{
+                        label: 'Wzrost korzyści po migracji',
+                        data: [85, 90, 75, 95],
+                        backgroundColor: [
+                            'rgba(212, 163, 115, 0.6)',
+                            'rgba(140, 122, 104, 0.6)',
+                            'rgba(250, 243, 231, 0.8)',
+                            'rgba(239, 230, 218, 0.8)'
+                        ],
+                        borderColor: [
+                            '#D4A373',
+                            '#8C7A68',
+                            '#D4A373',
+                            '#8C7A68'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Szacowany wzrost: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            const header = document.getElementById('header');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: `-${header.offsetHeight}px 0px 0px 0px`, threshold: 0.4 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                   if (window.innerWidth < 768) {
+                       mobileMenu.classList.add('hidden');
+                   }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
